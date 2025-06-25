@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🇨🇦 Canada Time Zone Map</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .map-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .time-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .time-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .time-zone {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .time-zone:hover {
+            transform: translateY(-2px);
+        }
+
+        .zone-name {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .zone-time {
+            font-size: 24px;
+            margin: 5px 0;
+        }
+
+        .zone-utc {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-pause {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-start {
+            background: #4ecdc4;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .info-section {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .info-box h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-box li {
+            padding: 5px 0;
+            color: #666;
+        }
+
+        .info-box li strong {
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🇨🇦 Canada Time Zone Map</h1>
+            <p>Interactive map showing Canada's six time zones with real-time updates</p>
+        </div>
+
+        <div class="main-content">
+            <div class="map-section">
+                <div id="mapDiv" style="width: 100%; height: 500px;"></div>
+            </div>
+
+            <div class="time-section">
+                <h2>Current Times</h2>
+                <div class="controls">
+                    <button class="btn btn-pause" onclick="pauseAutoRefresh()">⏸️ Pause</button>
+                    <button class="btn btn-start" onclick="startAutoRefresh()">▶️ Start</button>
+                </div>
+                <div id="timeZones"></div>
+            </div>
+
+            <div class="info-section">
+                <h2 style="color: #333; margin-bottom: 20px;">About Canada's Time Zones</h2>
+                <div class="info-grid">
+                    <div class="info-box">
+                        <h3>Time Zone Facts:</h3>
+                        <ul>
+                            <li>• Canada spans 6 time zones from coast to coast</li>
+                            <li>• Newfoundland Time is unique with a 30-minute offset</li>
+                            <li>• Some provinces observe Daylight Saving Time</li>
+                            <li>• Saskatchewan mostly stays on standard time year-round</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3>Geographic Coverage:</h3>
+                        <ul>
+                            <li><strong>Pacific:</strong> BC, Yukon</li>
+                            <li><strong>Mountain:</strong> Alberta, NWT</li>
+                            <li><strong>Central:</strong> Saskatchewan, Manitoba</li>
+                            <li><strong>Eastern:</strong> Ontario, Quebec</li>
+                            <li><strong>Atlantic:</strong> Maritimes</li>
+                            <li><strong>Newfoundland:</strong> Newfoundland & Labrador</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Time zone configuration
+        const timeZones = {
+            'Pacific': {
+                offset: -8,
+                color: '#FF6B6B',
+                lonRange: [-141, -120],
+                provinces: ['British Columbia', 'Yukon']
+            },
+            'Mountain': {
+                offset: -7,
+                color: '#4ECDC4',
+                lonRange: [-120, -110],
+                provinces: ['Alberta', 'Northwest Territories']
+            },
+            'Central': {
+                offset: -6,
+                color: '#45B7D1',
+                lonRange: [-110, -90],
+                provinces: ['Saskatchewan', 'Manitoba', 'Nunavut (west)']
+            },
+            'Eastern': {
+                offset: -5,
+                color: '#96CEB4',
+                lonRange: [-90, -68],
+                provinces: ['Ontario', 'Quebec', 'Nunavut (east)']
+            },
+            'Atlantic': {
+                offset: -4,
+                color: '#FECA57',
+                lonRange: [-68, -60],
+                provinces: ['New Brunswick', 'Nova Scotia', 'Prince Edward Island']
+            },
+            'Newfoundland': {
+                offset: -3.5,
+                color: '#FF9FF3',
+                lonRange: [-60, -52],
+                provinces: ['Newfoundland and Labrador']
+            }
+        };
+
+        // Major cities
+        const cities = [
+            {name: 'Vancouver', lat: 49.2827, lon: -123.1207, zone: 'Pacific'},
+            {name: 'Calgary', lat: 51.0447, lon: -114.0719, zone: 'Mountain'},
+            {name: 'Winnipeg', lat: 49.8951, lon: -97.1384, zone: 'Central'},
+            {name: 'Toronto', lat: 43.6532, lon: -79.3832, zone: 'Eastern'},
+            {name: 'Montreal', lat: 45.5017, lon: -73.5673, zone: 'Eastern'},
+            {name: 'Halifax', lat: 44.6488, lon: -63.5752, zone: 'Atlantic'},
+            {name: "St. John's", lat: 47.5615, lon: -52.7126, zone: 'Newfoundland'}
+        ];
+
+        let autoRefresh = true;
+        let refreshInterval;
+
+        // Get current time for a specific UTC offset
+        function getCurrentTime(utcOffset) {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const targetTime = new Date(utc + (utcOffset * 3600000));
+            return targetTime;
+        }
+
+        // Format time as HH:MM:SS
+        function formatTime(date) {
+            return date.toTimeString().split(' ')[0];
+        }
+
+        // Update time displays
+        function updateTimes() {
+            const timeZonesDiv = document.getElementById('timeZones');
+            let html = '';
+
+            Object.entries(timeZones).forEach(([zoneName, zoneData]) => {
+                const currentTime = getCurrentTime(zoneData.offset);
+                const timeString = formatTime(currentTime);
+                const offsetString = zoneData.offset > 0 ? `+${zoneData.offset}` : zoneData.offset;
+
+                html += `
+                    <div class="time-zone" style="background-color: ${zoneData.color};">
+                        <div class="zone-name">${zoneName}</div>
+                        <div class="zone-time">${timeString}</div>
+                        <div class="zone-utc">UTC${offsetString}</div>
+                    </div>
+                `;
+            });
+
+            timeZonesDiv.innerHTML = html;
+        }
+
+        // Create the map
+        function createMap() {
+            const traces = [];
+
+            // Add time zone regions
+            Object.entries(timeZones).forEach(([zoneName, zoneData]) => {
+                const [lonMin, lonMax] = zoneData.lonRange;
+                
+                traces.push({
+                    x: [lonMin, lonMax, lonMax, lonMin, lonMin],
+                    y: [41, 41, 84, 84, 41],
+                    fill: 'toself',
+                    fillcolor: zoneData.color,
+                    opacity: 0.6,
+                    line: {color: zoneData.color, width: 2},
+                    name: `${zoneName} Time`,
+                    hovertemplate: `<b>${zoneName} Time Zone</b><br>UTC${zoneData.offset > 0 ? '+' : ''}${zoneData.offset}<br>Provinces: ${zoneData.provinces.join(', ')}<extra></extra>`,
+                    showlegend: true,
+                    type: 'scatter'
+                });
+            });
+
+            // Add cities
+            cities.forEach(city => {
+                const zoneColor = timeZones[city.zone].color;
+                traces.push({
+                    x: [city.lon],
+                    y: [city.lat],
+                    mode: 'markers+text',
+                    marker: {
+                        size: 12,
+                        color: 'white',
+                        line: {color: zoneColor, width: 3}
+                    },
+                    text: [city.name],
+                    textposition: 'top center',
+                    textfont: {size: 10, color: 'black'},
+                    name: city.name,
+                    showlegend: false,
+                    hovertemplate: `<b>${city.name}</b><br>Time Zone: ${city.zone}<extra></extra>`,
+                    type: 'scatter'
+                });
+            });
+
+            const layout = {
+                title: 'Canada Time Zones',
+                xaxis: {title: 'Longitude', range: [-145, -50]},
+                yaxis: {title: 'Latitude', range: [40, 85]},
+                height: 500,
+                showlegend: true,
+                legend: {x: 0, y: 1, bgcolor: 'rgba(255,255,255,0.8)'},
+                margin: {l: 50, r: 50, t: 50, b: 50}
+            };
+
+            Plotly.newPlot('mapDiv', traces, layout, {responsive: true});
+        }
+
+        // Auto-refresh controls
+        function pauseAutoRefresh() {
+            autoRefresh = false;
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        }
+
+        function startAutoRefresh() {
+            autoRefresh = true;
+            refreshInterval = setInterval(updateTimes, 1000);
+        }
+
+        // Initialize the application
+        function init() {
+            createMap();
+            updateTimes();
+            startAutoRefresh();
+        }
+
+        // Start the application when the page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
