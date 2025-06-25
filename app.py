@@ -4,6 +4,7 @@ import plotly.express as px
 import pandas as pd
 from datetime import datetime
 import pytz
+import time
 
 # Page config
 st.set_page_config(page_title="Canada Time Zone Map", layout="wide")
@@ -134,13 +135,17 @@ with col1:
 with col2:
     st.subheader("Current Times")
     
+    # Create a placeholder for real-time updates
+    time_container = st.empty()
+    
     # Display current time for each zone
+    time_html = ""
     for zone_name, zone_data in time_zones.items():
         try:
             tz = pytz.timezone(zone_data['tz'])
             current_time = datetime.now(tz)
             
-            st.markdown(f"""
+            time_html += f"""
             <div style="background-color: {zone_data['color']}; 
                         padding: 10px; margin: 5px 0; border-radius: 5px; 
                         color: white; font-weight: bold;">
@@ -148,9 +153,11 @@ with col2:
                 <div style="font-size: 18px;">{current_time.strftime('%H:%M:%S')}</div>
                 <div style="font-size: 12px;">UTC{zone_data['utc_offset']:+g}</div>
             </div>
-            """, unsafe_allow_html=True)
+            """
         except:
-            st.error(f"Could not get time for {zone_name}")
+            time_html += f"<div>Could not get time for {zone_name}</div>"
+    
+    time_container.markdown(time_html, unsafe_allow_html=True)
 
 # Add information section
 st.markdown("---")
@@ -178,6 +185,21 @@ with col4:
     - **Newfoundland**: Newfoundland & Labrador
     """)
 
-# Auto-refresh every minute
-if st.button("🔄 Refresh Times"):
+# Auto-refresh every second for real-time updates
+if 'auto_refresh' not in st.session_state:
+    st.session_state.auto_refresh = True
+
+# Add control to stop/start auto-refresh
+col_refresh1, col_refresh2 = st.columns(2)
+with col_refresh1:
+    if st.button("⏸️ Pause Auto-Refresh"):
+        st.session_state.auto_refresh = False
+        
+with col_refresh2:
+    if st.button("▶️ Start Auto-Refresh"):
+        st.session_state.auto_refresh = True
+
+# Auto-refresh logic
+if st.session_state.auto_refresh:
+    time.sleep(1)
     st.rerun()
